@@ -102,3 +102,5 @@ const AllAgentsPage = () => {
     </div>
   );
 };
+
+export default AllAgentsPage;

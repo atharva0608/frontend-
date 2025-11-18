@@ -98,3 +98,5 @@ const ClientDetailView = ({ clientId, onBack }) => {
     </div>
   );
 };
+
+export default ClientDetailView;

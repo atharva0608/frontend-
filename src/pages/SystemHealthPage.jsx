@@ -83,3 +83,5 @@ const SystemHealthPage = () => {
     </div>
   );
 };
+
+export default SystemHealthPage;

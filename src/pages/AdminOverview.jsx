@@ -214,3 +214,5 @@ const AdminOverview = () => {
     </div>
   );
 };
+
+export default AdminOverview;

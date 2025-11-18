@@ -165,3 +165,5 @@ const ClientAgentsTab = ({ clientId }) => {
     </>
   );
 };
+
+export default ClientAgentsTab;
