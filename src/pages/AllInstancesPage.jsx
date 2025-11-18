@@ -121,3 +121,5 @@ const AllInstancesPage = () => {
     </div>
   );
 };
+
+export default AllInstancesPage;

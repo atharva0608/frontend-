@@ -83,3 +83,5 @@ const GlobalSavingsPage = () => {
     </div>
   );
 };
+
+export default GlobalSavingsPage;

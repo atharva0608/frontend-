@@ -208,3 +208,5 @@ const AllClientsPage = ({ onSelectClient }) => {
     </>
   );
 };
+
+export default AllClientsPage;

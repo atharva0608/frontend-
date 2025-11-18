@@ -213,3 +213,5 @@ const ClientOverviewTab = ({ clientId }) => {
     </div>
   );
 };
+
+export default ClientOverviewTab;

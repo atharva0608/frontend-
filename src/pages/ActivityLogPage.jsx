@@ -58,3 +58,5 @@ const ActivityLogPage = () => {
     </div>
   );
 };
+
+export default ActivityLogPage;

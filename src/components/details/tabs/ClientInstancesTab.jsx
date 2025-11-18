@@ -176,3 +176,5 @@ const ClientInstancesTab = ({ clientId }) => {
     </div>
   );
 };
+
+export default ClientInstancesTab;

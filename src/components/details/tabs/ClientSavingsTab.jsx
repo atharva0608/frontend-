@@ -177,3 +177,5 @@ const ClientSavingsTab = ({ clientId }) => {
     </div>
   );
 };
+
+export default ClientSavingsTab;

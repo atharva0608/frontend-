@@ -119,3 +119,5 @@ const ClientHistoryTab = ({ clientId }) => {
     </div>
   );
 };
+
+export default ClientHistoryTab;
