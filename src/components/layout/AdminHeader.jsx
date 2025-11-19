@@ -81,10 +81,6 @@ const AdminHeader = ({ stats, onRefresh, lastRefresh, onMenuToggle }) => {
                   </span>
                 )}
               </button>
-              <div className="hidden sm:flex items-center space-x-2 px-3 py-2 bg-gray-50 rounded-lg">
-                <span className={`w-3 h-3 rounded-full ${stats?.backendHealth === 'Healthy' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
-                <span className="text-sm font-medium text-gray-700">{stats?.backendHealth || 'Loading...'}</span>
-              </div>
             </div>
           </div>
 
