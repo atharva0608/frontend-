@@ -1,5 +1,5 @@
 // ==============================================================================
-// COMPLETE API CLIENT - Updated with new client management methods
+// COMPLETE API CLIENT - Synchronized with Backend v4.0
 // ==============================================================================
 
 class APIClient {
@@ -29,16 +29,30 @@ class APIClient {
     }
   }
 
-  // Admin APIs
-  async getGlobalStats() { return this.request('/api/admin/stats'); }
-  async getAllClients() { return this.request('/api/admin/clients'); }
-  async getRecentActivity() { return this.request('/api/admin/activity'); }
-  async getSystemHealth() { return this.request('/api/admin/system-health'); }
-  async getPoolStatistics() { return this.request('/api/admin/pool-statistics'); }
-  async getAgentHealth() { return this.request('/api/admin/agent-health'); }
-  async exportGlobalStats() { window.open(`${this.baseUrl}/api/admin/export/global-stats`, '_blank'); }
+  // ==============================================================================
+  // ADMIN APIs
+  // ==============================================================================
 
-  // NEW: Client Management APIs
+  async getGlobalStats() {
+    return this.request('/api/admin/stats');
+  }
+
+  async getAllClients() {
+    return this.request('/api/admin/clients');
+  }
+
+  async getRecentActivity() {
+    return this.request('/api/admin/activity');
+  }
+
+  async getSystemHealth() {
+    return this.request('/api/admin/system-health');
+  }
+
+  // ==============================================================================
+  // CLIENT MANAGEMENT APIs
+  // ==============================================================================
+
   async createClient(name) {
     return this.request('/api/admin/clients/create', {
       method: 'POST',
@@ -62,7 +76,10 @@ class APIClient {
     return this.request(`/api/admin/clients/${clientId}/token`);
   }
 
-  // Notification APIs
+  // ==============================================================================
+  // NOTIFICATION APIs
+  // ==============================================================================
+
   async getNotifications(clientId = null, limit = 10) {
     const params = new URLSearchParams();
     if (clientId) params.append('client_id', clientId);
@@ -71,7 +88,9 @@ class APIClient {
   }
 
   async markNotificationRead(notifId) {
-    return this.request(`/api/notifications/${notifId}/mark-read`, { method: 'POST' });
+    return this.request(`/api/notifications/${notifId}/mark-read`, {
+      method: 'POST'
+    });
   }
 
   async markAllNotificationsRead(clientId = null) {
@@ -81,15 +100,42 @@ class APIClient {
     });
   }
 
-  // Search API
-  async globalSearch(query) {
-    return this.request(`/api/search?q=${encodeURIComponent(query)}`);
+  // ==============================================================================
+  // CLIENT APIs
+  // ==============================================================================
+
+  async getClientDetails(clientId) {
+    return this.request(`/api/client/${clientId}`);
   }
 
-  // Client APIs
-  async getClientDetails(clientId) { return this.request(`/api/client/${clientId}`); }
-  async getAgents(clientId) { return this.request(`/api/client/${clientId}/agents`); }
-  async getClientChartData(clientId) { return this.request(`/api/client/${clientId}/stats/charts`); }
+  async getAgents(clientId) {
+    return this.request(`/api/client/${clientId}/agents`);
+  }
+
+  async getClientChartData(clientId) {
+    return this.request(`/api/client/${clientId}/stats/charts`);
+  }
+
+  async getInstances(clientId, filters = {}) {
+    const params = new URLSearchParams(
+      Object.entries(filters).filter(([_, v]) => v && v !== 'all')
+    );
+    const query = params.toString() ? `?${params}` : '';
+    return this.request(`/api/client/${clientId}/instances${query}`);
+  }
+
+  async getSavings(clientId, range = 'monthly') {
+    return this.request(`/api/client/${clientId}/savings?range=${range}`);
+  }
+
+  async getSwitchHistory(clientId, instanceId = null) {
+    const query = instanceId ? `?instance_id=${instanceId}` : '';
+    return this.request(`/api/client/${clientId}/switch-history${query}`);
+  }
+
+  // ==============================================================================
+  // AGENT APIs
+  // ==============================================================================
 
   async toggleAgent(agentId, enabled) {
     return this.request(`/api/client/agents/${agentId}/toggle-enabled`, {
@@ -112,17 +158,9 @@ class APIClient {
     });
   }
 
-  async getAgentStatistics(agentId) {
-    return this.request(`/api/client/agents/${agentId}/statistics`);
-  }
-
-  async getInstances(clientId, filters = {}) {
-    const params = new URLSearchParams(
-      Object.entries(filters).filter(([_, v]) => v && v !== 'all')
-    );
-    const query = params.toString() ? `?${params}` : '';
-    return this.request(`/api/client/${clientId}/instances${query}`);
-  }
+  // ==============================================================================
+  // INSTANCE APIs
+  // ==============================================================================
 
   async getInstancePricing(instanceId) {
     return this.request(`/api/client/instances/${instanceId}/pricing`);
@@ -132,10 +170,6 @@ class APIClient {
     return this.request(`/api/client/instances/${instanceId}/metrics`);
   }
 
-  async getPriceHistory(instanceId, days = 7, interval = 'hour') {
-    return this.request(`/api/client/instances/${instanceId}/price-history?days=${days}&interval=${interval}`);
-  }
-
   async forceSwitch(instanceId, body) {
     return this.request(`/api/client/instances/${instanceId}/force-switch`, {
       method: 'POST',
@@ -143,41 +177,129 @@ class APIClient {
     });
   }
 
-  async getSavings(clientId, range = 'monthly') {
-    return this.request(`/api/client/${clientId}/savings?range=${range}`);
-  }
-
-  async getSwitchHistory(clientId, instanceId = null) {
-    const query = instanceId ? `?instance_id=${instanceId}` : '';
-    return this.request(`/api/client/${clientId}/switch-history${query}`);
-  }
-
-  async exportSavings(clientId) {
-    window.open(`${this.baseUrl}/api/client/${clientId}/export/savings`, '_blank');
-  }
-
-  async exportSwitchHistory(clientId) {
-    window.open(`${this.baseUrl}/api/client/${clientId}/export/switch-history`, '_blank');
-  }
+  // ==============================================================================
+  // HEALTH CHECK
+  // ==============================================================================
 
   async healthCheck() {
     return this.request('/health');
   }
 
+  // ==============================================================================
+  // MOCK/PLACEHOLDER METHODS FOR MISSING BACKEND ENDPOINTS
+  // These return mock data until backend endpoints are implemented
+  // ==============================================================================
+
+  async globalSearch(query) {
+    // TODO: Backend endpoint /api/search does not exist yet
+    console.warn('globalSearch: Backend endpoint not implemented, returning mock data');
+    return { clients: [], instances: [], agents: [] };
+  }
+
+  async getPriceHistory(instanceId, days = 7, interval = 'hour') {
+    // TODO: Backend endpoint /api/client/instances/${instanceId}/price-history does not exist yet
+    console.warn('getPriceHistory: Backend endpoint not implemented, returning empty array');
+    return [];
+  }
+
+  async getAgentStatistics(agentId) {
+    // TODO: Backend endpoint /api/client/agents/${agentId}/statistics does not exist yet
+    console.warn('getAgentStatistics: Backend endpoint not implemented, returning mock data');
+    return { totalDecisions: 0, successRate: 0 };
+  }
+
   async getInstanceLogs(instanceId, limit = 50) {
-    return this.request(`/api/client/instances/${instanceId}/logs?limit=${limit}`);
+    // TODO: Backend endpoint /api/client/instances/${instanceId}/logs does not exist yet
+    console.warn('getInstanceLogs: Backend endpoint not implemented, returning empty array');
+    return [];
   }
 
   async getAllInstancesGlobal(filters = {}) {
-    const params = new URLSearchParams(
-      Object.entries(filters).filter(([_, v]) => v && v !== 'all')
-    );
-    const query = params.toString() ? `?${params}` : '';
-    return this.request(`/api/admin/instances${query}`);
+    // TODO: Backend endpoint /api/admin/instances does not exist yet
+    // Workaround: Get all clients and aggregate their instances
+    console.warn('getAllInstancesGlobal: Using workaround - fetching from all clients');
+    try {
+      const clients = await this.getAllClients();
+      const allInstances = [];
+
+      for (const client of clients) {
+        try {
+          const instances = await this.getInstances(client.id, filters);
+          const instancesWithClient = instances.map(inst => ({
+            ...inst,
+            clientName: client.name,
+            clientId: client.id
+          }));
+          allInstances.push(...instancesWithClient);
+        } catch (err) {
+          console.error(`Failed to fetch instances for client ${client.id}:`, err);
+        }
+      }
+
+      return allInstances;
+    } catch (error) {
+      console.error('Failed to fetch global instances:', error);
+      return [];
+    }
   }
 
   async getAllAgentsGlobal() {
-    return this.request('/api/admin/agents');
+    // TODO: Backend endpoint /api/admin/agents does not exist yet
+    // Workaround: Get all clients and aggregate their agents
+    console.warn('getAllAgentsGlobal: Using workaround - fetching from all clients');
+    try {
+      const clients = await this.getAllClients();
+      const allAgents = [];
+
+      for (const client of clients) {
+        try {
+          const agents = await this.getAgents(client.id);
+          const agentsWithClient = agents.map(agent => ({
+            ...agent,
+            clientName: client.name,
+            clientId: client.id
+          }));
+          allAgents.push(...agentsWithClient);
+        } catch (err) {
+          console.error(`Failed to fetch agents for client ${client.id}:`, err);
+        }
+      }
+
+      return allAgents;
+    } catch (error) {
+      console.error('Failed to fetch global agents:', error);
+      return [];
+    }
+  }
+
+  async exportSavings(clientId) {
+    // TODO: Backend endpoint /api/client/${clientId}/export/savings does not exist yet
+    console.warn('exportSavings: Backend endpoint not implemented');
+    alert('Export functionality not yet available in backend');
+  }
+
+  async exportSwitchHistory(clientId) {
+    // TODO: Backend endpoint /api/client/${clientId}/export/switch-history does not exist yet
+    console.warn('exportSwitchHistory: Backend endpoint not implemented');
+    alert('Export functionality not yet available in backend');
+  }
+
+  async exportGlobalStats() {
+    // TODO: Backend endpoint /api/admin/export/global-stats does not exist yet
+    console.warn('exportGlobalStats: Backend endpoint not implemented');
+    alert('Export functionality not yet available in backend');
+  }
+
+  async getPoolStatistics() {
+    // TODO: Backend endpoint /api/admin/pool-statistics does not exist yet
+    console.warn('getPoolStatistics: Backend endpoint not implemented, returning mock data');
+    return { total: 0, active: 0, regions: [] };
+  }
+
+  async getAgentHealth() {
+    // TODO: Backend endpoint /api/admin/agent-health does not exist yet
+    console.warn('getAgentHealth: Backend endpoint not implemented, returning mock data');
+    return { online: 0, offline: 0, total: 0 };
   }
 }
 
