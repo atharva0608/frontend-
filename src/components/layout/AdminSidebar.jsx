@@ -1,11 +1,11 @@
 import React from 'react';
 import {
-  LayoutDashboard, Users, Server, Zap, BarChart3, History, Activity, X
+  LayoutDashboard, Users, Server, Zap, BarChart3, History, Activity, X, Brain, CheckCircle, AlertCircle
 } from 'lucide-react';
 import LoadingSpinner from '../common/LoadingSpinner';
 import Badge from '../common/Badge';
 
-const AdminSidebar = ({ clients, onSelectClient, activeClientId, onSelectPage, activePage, isOpen, onClose }) => {
+const AdminSidebar = ({ clients, onSelectClient, activeClientId, onSelectPage, activePage, isOpen, onClose, systemHealth }) => {
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={18} /> },
     { id: 'clients', label: 'Clients', icon: <Users size={18} /> },
@@ -106,6 +106,41 @@ const AdminSidebar = ({ clients, onSelectClient, activeClientId, onSelectPage, a
         </div>
 
         <div className="p-4 border-t border-gray-700 flex-shrink-0">
+          {systemHealth && systemHealth.mlModels && (
+            <div className="bg-gray-800 rounded-lg p-3 mb-3 border border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <Brain size={16} className="text-blue-400" />
+                  <span className="text-xs font-semibold text-gray-200">ML Model Status</span>
+                </div>
+                {systemHealth.decisionEngine?.status === 'Running' ? (
+                  <CheckCircle size={14} className="text-green-400" />
+                ) : (
+                  <AlertCircle size={14} className="text-yellow-400" />
+                )}
+              </div>
+              <div className="space-y-1 text-xs text-gray-400">
+                <div className="flex justify-between">
+                  <span>Name:</span>
+                  <span className="text-gray-300 font-medium">
+                    {systemHealth.mlModels?.name || 'Decision Model'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Version:</span>
+                  <span className="text-gray-300 font-medium">
+                    {systemHealth.mlModels?.version || 'v1.0.0'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Loaded:</span>
+                  <span className="text-gray-300 font-medium">
+                    {systemHealth.mlModels?.loaded || '2/2'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="text-xs text-gray-400 space-y-1">
             <p>© 2025 SmartDevops</p>
           </div>

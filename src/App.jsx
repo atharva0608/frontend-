@@ -16,17 +16,20 @@ const App = () => {
   const [selectedClientId, setSelectedClientId] = useState(null);
   const [clients, setClients] = useState([]);
   const [stats, setStats] = useState(null);
+  const [systemHealth, setSystemHealth] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
-      const [clientsData, statsData] = await Promise.all([
+      const [clientsData, statsData, healthData] = await Promise.all([
         api.getAllClients(),
-        api.getGlobalStats()
+        api.getGlobalStats(),
+        api.getSystemHealth()
       ]);
       setClients(clientsData);
       setStats(statsData);
+      setSystemHealth(healthData);
       setLastRefresh(new Date().toISOString());
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -66,6 +69,7 @@ const App = () => {
         activePage={activePage}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        systemHealth={systemHealth}
       />
 
       {/* Main Content Area */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Server, Zap, BarChart3, History, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, Server, Zap, BarChart3, History, ChevronLeft, Brain } from 'lucide-react';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
 import api from '../../services/api';
@@ -8,6 +8,7 @@ import ClientAgentsTab from './tabs/ClientAgentsTab';
 import ClientInstancesTab from './tabs/ClientInstancesTab';
 import ClientSavingsTab from './tabs/ClientSavingsTab';
 import ClientHistoryTab from './tabs/ClientHistoryTab';
+import ClientModelsTab from './tabs/ClientModelsTab';
 
 const ClientDetailView = ({ clientId, onBack }) => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -34,6 +35,7 @@ const ClientDetailView = ({ clientId, onBack }) => {
     { id: 'agents', label: 'Agents', icon: <Server size={16} /> },
     { id: 'instances', label: 'Instances', icon: <Zap size={16} /> },
     { id: 'savings', label: 'Savings', icon: <BarChart3 size={16} /> },
+    { id: 'models', label: 'Models', icon: <Brain size={16} /> },
     { id: 'history', label: 'History', icon: <History size={16} /> },
   ];
 
@@ -93,6 +95,7 @@ const ClientDetailView = ({ clientId, onBack }) => {
         {activeTab === 'agents' && <ClientAgentsTab clientId={clientId} />}
         {activeTab === 'instances' && <ClientInstancesTab clientId={clientId} />}
         {activeTab === 'savings' && <ClientSavingsTab clientId={clientId} />}
+        {activeTab === 'models' && <ClientModelsTab clientId={clientId} />}
         {activeTab === 'history' && <ClientHistoryTab clientId={clientId} />}
       </div>
     </div>

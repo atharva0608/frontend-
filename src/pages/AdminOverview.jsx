@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Server, Database, TrendingUp, AlertCircle, RefreshCw, CheckCircle, Zap, DollarSign, Download } from 'lucide-react';
+import { Users, Server, Database, TrendingUp, AlertCircle, RefreshCw, CheckCircle, Zap, DollarSign, Download, Copy } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import StatCard from '../components/common/StatCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
@@ -11,31 +12,75 @@ const AdminOverview = () => {
   const [activity, setActivity] = useState([]);
   const [stats, setStats] = useState(null);
   const [clients, setClients] = useState([]);
+  const [clientGrowth, setClientGrowth] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [activityData, statsData, clientsData, growthData] = await Promise.all([
+        api.getRecentActivity(),
+        api.getGlobalStats(),
+        api.getAllClients(),
+        api.getClientsGrowth(30)
+      ]);
+      setActivity(activityData);
+      setStats(statsData);
+      setClients(clientsData);
+      setClientGrowth(growthData);
+    } catch (error) {
+      console.error('Failed to load overview data:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const [activityData, statsData, clientsData] = await Promise.all([
-          api.getRecentActivity(),
-          api.getGlobalStats(),
-          api.getAllClients()
-        ]);
-        setActivity(activityData);
-        setStats(statsData);
-        setClients(clientsData);
-      } catch (error) {
-        console.error('Failed to load overview data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadData();
-    
+
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+  };
+
+  const handleExport = () => {
+    const exportData = {
+      timestamp: new Date().toISOString(),
+      stats: stats,
+      clients: clients,
+      activity: activity
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dashboard-stats-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCopy = async () => {
+    const copyData = {
+      timestamp: new Date().toISOString(),
+      stats: stats,
+      topClients: clients.sort((a, b) => b.totalSavings - a.totalSavings).slice(0, 5)
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(copyData, null, 2));
+      alert('Dashboard stats copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      alert('Failed to copy to clipboard');
+    }
+  };
 
   const icons = {
     switch: <RefreshCw size={16} className="text-blue-500" />,
@@ -46,9 +91,44 @@ const AdminOverview = () => {
   const topClients = clients
     .sort((a, b) => b.totalSavings - a.totalSavings)
     .slice(0, 5);
-  
+
   return (
     <div className="space-y-6">
+      {/* Dashboard Header with Action Buttons */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
+          <p className="text-sm text-gray-500 mt-1">Real-time system monitoring and statistics</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            icon={refreshing ? <RefreshCw size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            icon={<Download size={16} />}
+            onClick={handleExport}
+          >
+            Export
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            icon={<Copy size={16} />}
+            onClick={handleCopy}
+          >
+            Copy
+          </Button>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <StatCard 
@@ -78,7 +158,67 @@ const AdminOverview = () => {
           changeType="positive"
         />
       </div>
-      
+
+      {/* Client Growth Chart */}
+      <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">Client Growth (30 Days)</h3>
+            <p className="text-sm text-gray-500 mt-1">Daily client registration trend</p>
+          </div>
+          <Badge variant="success">
+            <TrendingUp size={14} className="inline mr-1" />
+            Growing
+          </Badge>
+        </div>
+        {loading ? (
+          <div className="flex justify-center items-center h-64"><LoadingSpinner /></div>
+        ) : clientGrowth.length === 0 ? (
+          <EmptyState
+            icon={<TrendingUp size={48} />}
+            title="No Growth Data"
+            description="Client growth data will appear here once available"
+          />
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={clientGrowth}>
+              <defs>
+                <linearGradient id="colorClients" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis
+                dataKey="date"
+                stroke="#6b7280"
+                style={{ fontSize: '12px' }}
+              />
+              <YAxis
+                stroke="#6b7280"
+                style={{ fontSize: '12px' }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  padding: '8px'
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="count"
+                stroke="#3B82F6"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#colorClients)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
       {/* Activity and Quick Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">

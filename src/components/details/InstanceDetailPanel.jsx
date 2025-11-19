@@ -15,22 +15,35 @@ const InstanceDetailPanel = ({ instanceId, clientId, onClose }) => {
   const [pricing, setPricing] = useState(null);
   const [metrics, setMetrics] = useState(null);
   const [priceHistory, setPriceHistory] = useState([]);
+  const [availableOptions, setAvailableOptions] = useState(null);
   const [loading, setLoading] = useState(true);
   const [switching, setSwitching] = useState(null);
   const [error, setError] = useState(null);
   const [showFallback, setShowFallback] = useState(false);
+  const [selectedPool, setSelectedPool] = useState('');
+  const [selectedInstanceType, setSelectedInstanceType] = useState('');
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const [pricingData, metricsData] = await Promise.all([
+        const [pricingData, metricsData, optionsData] = await Promise.all([
           api.getInstancePricing(instanceId),
-          api.getInstanceMetrics(instanceId)
+          api.getInstanceMetrics(instanceId),
+          api.getInstanceAvailableOptions(instanceId)
         ]);
         setPricing(pricingData);
         setMetrics(metricsData);
+        setAvailableOptions(optionsData);
+
+        // Set initial dropdown values
+        if (optionsData?.pools?.length > 0) {
+          setSelectedPool(optionsData.pools[0].id);
+        }
+        if (optionsData?.instanceTypes?.length > 0) {
+          setSelectedInstanceType(optionsData.instanceTypes[0]);
+        }
 
         try {
           const historyData = await api.getPriceHistory(instanceId, 7, 'hour');
@@ -155,6 +168,71 @@ const InstanceDetailPanel = ({ instanceId, clientId, onClose }) => {
                 {showFallback ? 'Hide' : 'Show'} Fallback
               </button>
             </div>
+
+            {/* Advanced Switching - Pool and Type Selection */}
+            {availableOptions && (
+              <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+                <h5 className="text-sm font-bold text-blue-900 mb-3">Advanced Switching</h5>
+
+                {/* Pool Selection */}
+                <div className="mb-3">
+                  <label className="block text-xs font-semibold text-gray-700 mb-2">
+                    Select Pool
+                  </label>
+                  <select
+                    value={selectedPool}
+                    onChange={(e) => setSelectedPool(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {availableOptions.pools?.map((pool) => (
+                      <option key={pool.id} value={pool.id}>
+                        {pool.id} - ${pool.price.toFixed(4)}/hr ({pool.savings.toFixed(1)}% savings)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Instance Type Selection */}
+                {availableOptions.instanceTypes && availableOptions.instanceTypes.length > 0 && (
+                  <div className="mb-3">
+                    <label className="block text-xs font-semibold text-gray-700 mb-2">
+                      Change Instance Type
+                    </label>
+                    <select
+                      value={selectedInstanceType}
+                      onChange={(e) => setSelectedInstanceType(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      {availableOptions.instanceTypes.map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Switch Button */}
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    const body = {
+                      target: 'pool',
+                      pool_id: selectedPool
+                    };
+                    if (selectedInstanceType && selectedInstanceType !== availableOptions.currentInstanceType) {
+                      body.instance_type = selectedInstanceType;
+                    }
+                    handleForceSwitch(body);
+                  }}
+                  loading={switching}
+                  className="w-full"
+                >
+                  Apply Switch
+                </Button>
+              </div>
+            )}
             {pricing && (
               <>
                 {showFallback && (

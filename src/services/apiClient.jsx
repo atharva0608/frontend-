@@ -1,5 +1,5 @@
 // ==============================================================================
-// COMPLETE API CLIENT - Synchronized with Backend v4.0
+// COMPLETE API CLIENT - Synchronized with Backend v4.0 (Updated)
 // ==============================================================================
 
 class APIClient {
@@ -47,6 +47,11 @@ class APIClient {
 
   async getSystemHealth() {
     return this.request('/api/admin/system-health');
+  }
+
+  // NEW: Client Growth Chart (Task 4)
+  async getClientsGrowth(days = 30) {
+    return this.request(`/api/admin/clients/growth?days=${days}`);
   }
 
   // ==============================================================================
@@ -133,6 +138,11 @@ class APIClient {
     return this.request(`/api/client/${clientId}/switch-history${query}`);
   }
 
+  // NEW: Agent Decisions (Task 7)
+  async getAgentDecisions(clientId) {
+    return this.request(`/api/client/${clientId}/agents/decisions`);
+  }
+
   // ==============================================================================
   // AGENT APIs
   // ==============================================================================
@@ -151,10 +161,11 @@ class APIClient {
     });
   }
 
-  async updateAgentConfig(agentId, config) {
+  // UPDATED: Simplified Agent Config (Task 6)
+  async updateAgentConfig(agentId, terminateWaitMinutes) {
     return this.request(`/api/client/agents/${agentId}/config`, {
       method: 'POST',
-      body: JSON.stringify(config),
+      body: JSON.stringify({ terminate_wait_minutes: terminateWaitMinutes }),
     });
   }
 
@@ -170,6 +181,12 @@ class APIClient {
     return this.request(`/api/client/instances/${instanceId}/metrics`);
   }
 
+  // NEW: Get Available Options for Instance (Task 5)
+  async getInstanceAvailableOptions(instanceId) {
+    return this.request(`/api/client/instances/${instanceId}/available-options`);
+  }
+
+  // UPDATED: Force Switch with Pool/Type support (Task 5)
   async forceSwitch(instanceId, body) {
     return this.request(`/api/client/instances/${instanceId}/force-switch`, {
       method: 'POST',
@@ -186,37 +203,30 @@ class APIClient {
   }
 
   // ==============================================================================
-  // MOCK/PLACEHOLDER METHODS FOR MISSING BACKEND ENDPOINTS
-  // These return mock data until backend endpoints are implemented
+  // LEGACY/MOCK METHODS - Kept for compatibility
   // ==============================================================================
 
   async globalSearch(query) {
-    // TODO: Backend endpoint /api/search does not exist yet
     console.warn('globalSearch: Backend endpoint not implemented, returning mock data');
     return { clients: [], instances: [], agents: [] };
   }
 
   async getPriceHistory(instanceId, days = 7, interval = 'hour') {
-    // TODO: Backend endpoint /api/client/instances/${instanceId}/price-history does not exist yet
     console.warn('getPriceHistory: Backend endpoint not implemented, returning empty array');
     return [];
   }
 
   async getAgentStatistics(agentId) {
-    // TODO: Backend endpoint /api/client/agents/${agentId}/statistics does not exist yet
     console.warn('getAgentStatistics: Backend endpoint not implemented, returning mock data');
     return { totalDecisions: 0, successRate: 0 };
   }
 
   async getInstanceLogs(instanceId, limit = 50) {
-    // TODO: Backend endpoint /api/client/instances/${instanceId}/logs does not exist yet
     console.warn('getInstanceLogs: Backend endpoint not implemented, returning empty array');
     return [];
   }
 
   async getAllInstancesGlobal(filters = {}) {
-    // TODO: Backend endpoint /api/admin/instances does not exist yet
-    // Workaround: Get all clients and aggregate their instances
     console.warn('getAllInstancesGlobal: Using workaround - fetching from all clients');
     try {
       const clients = await this.getAllClients();
@@ -244,8 +254,6 @@ class APIClient {
   }
 
   async getAllAgentsGlobal() {
-    // TODO: Backend endpoint /api/admin/agents does not exist yet
-    // Workaround: Get all clients and aggregate their agents
     console.warn('getAllAgentsGlobal: Using workaround - fetching from all clients');
     try {
       const clients = await this.getAllClients();
@@ -273,31 +281,26 @@ class APIClient {
   }
 
   async exportSavings(clientId) {
-    // TODO: Backend endpoint /api/client/${clientId}/export/savings does not exist yet
     console.warn('exportSavings: Backend endpoint not implemented');
     alert('Export functionality not yet available in backend');
   }
 
   async exportSwitchHistory(clientId) {
-    // TODO: Backend endpoint /api/client/${clientId}/export/switch-history does not exist yet
     console.warn('exportSwitchHistory: Backend endpoint not implemented');
     alert('Export functionality not yet available in backend');
   }
 
   async exportGlobalStats() {
-    // TODO: Backend endpoint /api/admin/export/global-stats does not exist yet
     console.warn('exportGlobalStats: Backend endpoint not implemented');
     alert('Export functionality not yet available in backend');
   }
 
   async getPoolStatistics() {
-    // TODO: Backend endpoint /api/admin/pool-statistics does not exist yet
     console.warn('getPoolStatistics: Backend endpoint not implemented, returning mock data');
     return { total: 0, active: 0, regions: [] };
   }
 
   async getAgentHealth() {
-    // TODO: Backend endpoint /api/admin/agent-health does not exist yet
     console.warn('getAgentHealth: Backend endpoint not implemented, returning mock data');
     return { online: 0, offline: 0, total: 0 };
   }
