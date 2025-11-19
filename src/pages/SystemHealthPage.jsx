@@ -3,11 +3,14 @@ import { Activity, Database, Cpu, Brain, CheckCircle } from 'lucide-react';
 import StatCard from '../components/common/StatCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import Badge from '../components/common/Badge';
+import FileUpload from '../components/common/FileUpload';
 import api from '../services/api';
 
 const SystemHealthPage = () => {
   const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showDecisionEngineUpload, setShowDecisionEngineUpload] = useState(false);
+  const [showMLModelsUpload, setShowMLModelsUpload] = useState(false);
 
   useEffect(() => {
     const loadHealth = async () => {
@@ -26,6 +29,32 @@ const SystemHealthPage = () => {
     const interval = setInterval(loadHealth, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleDecisionEngineUpload = async (files) => {
+    try {
+      await api.uploadDecisionEngine(files);
+      // Reload health data after successful upload
+      setTimeout(async () => {
+        const data = await api.getSystemHealth();
+        setHealth(data);
+      }, 3000);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleMLModelsUpload = async (files) => {
+    try {
+      await api.uploadMLModels(files);
+      // Reload health data after successful upload
+      setTimeout(async () => {
+        const data = await api.getSystemHealth();
+        setHealth(data);
+      }, 3000);
+    } catch (error) {
+      throw error;
+    }
+  };
 
   if (loading) {
     return <div className="flex justify-center items-center h-64"><LoadingSpinner /></div>;
@@ -74,6 +103,28 @@ const SystemHealthPage = () => {
                 </p>
               </div>
             )}
+
+            {/* Upload Section */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => setShowDecisionEngineUpload(!showDecisionEngineUpload)}
+                className="w-full text-left text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                {showDecisionEngineUpload ? '▼' : '▶'} Upload Decision Engine Files
+              </button>
+
+              {showDecisionEngineUpload && (
+                <div className="mt-4">
+                  <FileUpload
+                    onUpload={handleDecisionEngineUpload}
+                    accept=".pkl,.joblib,.h5,.pb"
+                    multiple={false}
+                    title="Upload Decision Engine"
+                    description="Upload decision engine model file (.pkl, .joblib, .h5, .pb)"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -129,6 +180,28 @@ const SystemHealthPage = () => {
                 <p className="text-xs text-gray-600">No active models loaded</p>
               </div>
             )}
+
+            {/* Upload Section */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => setShowMLModelsUpload(!showMLModelsUpload)}
+                className="w-full text-left text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                {showMLModelsUpload ? '▼' : '▶'} Upload ML Model Files
+              </button>
+
+              {showMLModelsUpload && (
+                <div className="mt-4">
+                  <FileUpload
+                    onUpload={handleMLModelsUpload}
+                    accept=".pkl,.joblib,.h5,.pb,.pth,.onnx"
+                    multiple={true}
+                    title="Upload ML Models"
+                    description="Upload ML model files (.pkl, .joblib, .h5, .pb, .pth, .onnx). Multiple files supported."
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
