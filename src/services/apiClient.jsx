@@ -54,6 +54,58 @@ class APIClient {
     return this.request(`/api/admin/clients/growth?days=${days}`);
   }
 
+  // NEW: Upload Decision Engine Files
+  async uploadDecisionEngine(files) {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+
+    try {
+      const response = await fetch(`${this.baseUrl}/api/admin/decision-engine/upload`, {
+        method: 'POST',
+        body: formData,
+        // Don't set Content-Type header - browser will set it with boundary
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || `Upload failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Decision Engine upload failed:', error);
+      throw error;
+    }
+  }
+
+  // NEW: Upload ML Model Files
+  async uploadMLModels(files) {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+
+    try {
+      const response = await fetch(`${this.baseUrl}/api/admin/ml-models/upload`, {
+        method: 'POST',
+        body: formData,
+        // Don't set Content-Type header - browser will set it with boundary
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || `Upload failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('ML Models upload failed:', error);
+      throw error;
+    }
+  }
+
   // ==============================================================================
   // CLIENT MANAGEMENT APIs
   // ==============================================================================

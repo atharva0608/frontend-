@@ -12,6 +12,7 @@ const AdminHeader = ({ stats, onRefresh, lastRefresh, onMenuToggle }) => {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     loadUnreadCount();
@@ -30,6 +31,15 @@ const AdminHeader = ({ stats, onRefresh, lastRefresh, onMenuToggle }) => {
 
   const handleSearchResultSelect = (type, id) => {
     console.log('Selected:', type, id);
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
   };
 
   return (
@@ -64,8 +74,10 @@ const AdminHeader = ({ stats, onRefresh, lastRefresh, onMenuToggle }) => {
               <Button
                 variant="outline"
                 size="sm"
-                icon={<RefreshCw size={16} />}
-                onClick={onRefresh}
+                icon={<RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />}
+                onClick={handleRefresh}
+                loading={isRefreshing}
+                disabled={isRefreshing}
                 className="hidden sm:flex"
               >
                 Refresh
@@ -81,10 +93,6 @@ const AdminHeader = ({ stats, onRefresh, lastRefresh, onMenuToggle }) => {
                   </span>
                 )}
               </button>
-              <div className="hidden sm:flex items-center space-x-2 px-3 py-2 bg-gray-50 rounded-lg">
-                <span className={`w-3 h-3 rounded-full ${stats?.backendHealth === 'Healthy' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
-                <span className="text-sm font-medium text-gray-700">{stats?.backendHealth || 'Loading...'}</span>
-              </div>
             </div>
           </div>
 
