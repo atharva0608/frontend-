@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  LayoutDashboard, Users, Server, Zap, BarChart3, History, Activity, X, Brain
+  LayoutDashboard, Users, Server, Zap, History, Activity, X, Brain
 } from 'lucide-react';
 import LoadingSpinner from '../common/LoadingSpinner';
 import Badge from '../common/Badge';
@@ -11,7 +11,6 @@ const AdminSidebar = ({ clients, onSelectClient, activeClientId, onSelectPage, a
     { id: 'clients', label: 'Clients', icon: <Users size={18} /> },
     { id: 'agents', label: 'All Agents', icon: <Server size={18} /> },
     { id: 'instances', label: 'All Instances', icon: <Zap size={18} /> },
-    { id: 'savings', label: 'Global Savings', icon: <BarChart3 size={18} /> },
     { id: 'activity', label: 'Activity Log', icon: <History size={18} /> },
     { id: 'health', label: 'System Health', icon: <Activity size={18} /> },
   ];
