@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  LayoutDashboard, Users, Server, Zap, BarChart3, History, Activity, X, Brain, CheckCircle, AlertCircle
+  LayoutDashboard, Users, Server, Zap, BarChart3, History, Activity, X, Brain
 } from 'lucide-react';
 import LoadingSpinner from '../common/LoadingSpinner';
 import Badge from '../common/Badge';
@@ -43,6 +43,44 @@ const AdminSidebar = ({ clients, onSelectClient, activeClientId, onSelectPage, a
             </button>
           </div>
         </div>
+
+        {/* System Status Card */}
+        {systemHealth && (
+          <div className="mx-3 mb-3 bg-gray-800 rounded-lg p-3 border border-gray-700">
+            <div className="flex items-center space-x-2 mb-3">
+              <Brain size={16} className="text-blue-400" />
+              <span className="text-xs font-semibold text-gray-200">System Status</span>
+            </div>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Model files loaded:</span>
+                <span className="text-gray-200 font-medium">
+                  {systemHealth.mlModels?.filesCount || systemHealth.mlModels?.loaded || '2'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Decision engine:</span>
+                <span className={`font-medium ${
+                  systemHealth.decisionEngine?.status === 'Running' || systemHealth.decisionEngine?.loaded
+                    ? 'text-green-400'
+                    : 'text-red-400'
+                }`}>
+                  {systemHealth.decisionEngine?.status === 'Running' || systemHealth.decisionEngine?.loaded ? 'Loaded' : 'Not Loaded'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">System status:</span>
+                <span className={`font-medium ${
+                  systemHealth.apiStatus === 'Healthy' || !systemHealth.apiStatus
+                    ? 'text-green-400'
+                    : 'text-yellow-400'
+                }`}>
+                  {systemHealth.apiStatus || 'Healthy'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <nav className="p-3 flex-shrink-0">
           <ul className="space-y-1">
@@ -106,42 +144,7 @@ const AdminSidebar = ({ clients, onSelectClient, activeClientId, onSelectPage, a
         </div>
 
         <div className="p-4 border-t border-gray-700 flex-shrink-0">
-          {systemHealth && systemHealth.mlModels && (
-            <div className="bg-gray-800 rounded-lg p-3 mb-3 border border-gray-700">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <Brain size={16} className="text-blue-400" />
-                  <span className="text-xs font-semibold text-gray-200">ML Model Status</span>
-                </div>
-                {systemHealth.decisionEngine?.status === 'Running' ? (
-                  <CheckCircle size={14} className="text-green-400" />
-                ) : (
-                  <AlertCircle size={14} className="text-yellow-400" />
-                )}
-              </div>
-              <div className="space-y-1 text-xs text-gray-400">
-                <div className="flex justify-between">
-                  <span>Name:</span>
-                  <span className="text-gray-300 font-medium">
-                    {systemHealth.mlModels?.name || 'Decision Model'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Version:</span>
-                  <span className="text-gray-300 font-medium">
-                    {systemHealth.mlModels?.version || 'v1.0.0'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Loaded:</span>
-                  <span className="text-gray-300 font-medium">
-                    {systemHealth.mlModels?.loaded || '2/2'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-          <div className="text-xs text-gray-400 space-y-1">
+          <div className="text-xs text-gray-400 text-center">
             <p>© 2025 SmartDevops</p>
           </div>
         </div>
