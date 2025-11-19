@@ -50,32 +50,65 @@ const AdminSidebar = ({ clients, onSelectClient, activeClientId, onSelectPage, a
               <Brain size={16} className="text-blue-400" />
               <span className="text-xs font-semibold text-gray-200">System Status</span>
             </div>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Model files loaded:</span>
-                <span className="text-gray-200 font-medium">
-                  {systemHealth.mlModels?.filesCount || systemHealth.mlModels?.loaded || '2'}
-                </span>
+
+            <div className="space-y-3 text-xs">
+              {/* Decision Engine */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-gray-400">Decision Engine:</span>
+                  <span className={`font-medium ${
+                    systemHealth.decisionEngineStatus?.loaded
+                      ? 'text-green-400'
+                      : 'text-red-400'
+                  }`}>
+                    {systemHealth.decisionEngineStatus?.loaded ? 'Loaded' : 'Not Loaded'}
+                  </span>
+                </div>
+                {systemHealth.decisionEngineStatus?.loaded && (
+                  <div className="ml-2 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Type:</span>
+                      <span className="text-gray-300">{systemHealth.decisionEngineStatus.type || 'ML-Based'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Version:</span>
+                      <span className="text-gray-300">{systemHealth.decisionEngineStatus.version || 'v1.0.0'}</span>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Decision engine:</span>
-                <span className={`font-medium ${
-                  systemHealth.decisionEngine?.status === 'Running' || systemHealth.decisionEngine?.loaded
-                    ? 'text-green-400'
-                    : 'text-red-400'
-                }`}>
-                  {systemHealth.decisionEngine?.status === 'Running' || systemHealth.decisionEngine?.loaded ? 'Loaded' : 'Not Loaded'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">System status:</span>
-                <span className={`font-medium ${
-                  systemHealth.apiStatus === 'Healthy' || !systemHealth.apiStatus
-                    ? 'text-green-400'
-                    : 'text-yellow-400'
-                }`}>
-                  {systemHealth.apiStatus || 'Healthy'}
-                </span>
+
+              {/* ML Models */}
+              <div className="border-t border-gray-700 pt-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-gray-400">ML Models:</span>
+                  <span className={`font-medium ${
+                    systemHealth.modelStatus?.loaded
+                      ? 'text-green-400'
+                      : 'text-gray-400'
+                  }`}>
+                    {systemHealth.modelStatus?.loaded ? 'Loaded' : 'Not Loaded'}
+                  </span>
+                </div>
+                {systemHealth.modelStatus?.loaded && (
+                  <div className="ml-2 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Files:</span>
+                      <span className="text-gray-300">{systemHealth.modelStatus.filesUploaded || 0}</span>
+                    </div>
+                    {systemHealth.modelStatus.activeModels && systemHealth.modelStatus.activeModels.length > 0 && (
+                      <div className="mt-1">
+                        <span className="text-gray-500 block mb-1">Active:</span>
+                        {systemHealth.modelStatus.activeModels.map((model, idx) => (
+                          <div key={idx} className="flex items-center space-x-1 ml-2">
+                            <div className="w-1 h-1 bg-green-400 rounded-full"></div>
+                            <span className="text-gray-300">{model.name} v{model.version}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

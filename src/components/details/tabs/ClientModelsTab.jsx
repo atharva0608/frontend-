@@ -1,25 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, CheckCircle, AlertCircle, XCircle, TrendingUp, Activity } from 'lucide-react';
+import { Server, CheckCircle, XCircle, Clock, TrendingUp, TrendingDown } from 'lucide-react';
 import LoadingSpinner from '../../common/LoadingSpinner';
 import EmptyState from '../../common/EmptyState';
 import Badge from '../../common/Badge';
 import api from '../../../services/api';
 
 const ClientModelsTab = ({ clientId }) => {
-  const [decisions, setDecisions] = useState([]);
+  const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
         const data = await api.getAgentDecisions(clientId);
-        setDecisions(data.decisions || []);
-        setStats(data.stats || null);
+        // Backend returns array of agents with decisions and pricing health
+        setAgents(data || []);
       } catch (error) {
         console.error('Failed to load agent decisions:', error);
-        setDecisions([]);
+        setAgents([]);
       } finally {
         setLoading(false);
       }
@@ -30,22 +29,18 @@ const ClientModelsTab = ({ clientId }) => {
     return () => clearInterval(interval);
   }, [clientId]);
 
-  const getHealthIcon = (health) => {
-    if (health >= 80) return <CheckCircle size={16} className="text-green-500" />;
-    if (health >= 50) return <AlertCircle size={16} className="text-yellow-500" />;
-    return <XCircle size={16} className="text-red-500" />;
+  const getDecisionColor = (type) => {
+    if (type === 'stay') return 'bg-blue-500';
+    if (type === 'switch_spot') return 'bg-green-500';
+    if (type === 'switch_ondemand') return 'bg-yellow-500';
+    return 'bg-gray-500';
   };
 
-  const getHealthColor = (health) => {
-    if (health >= 80) return 'text-green-600 bg-green-50 border-green-200';
-    if (health >= 50) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-red-600 bg-red-50 border-red-200';
-  };
-
-  const getDecisionBadge = (decision) => {
-    if (decision === 'switch') return <Badge variant="success">Switch</Badge>;
-    if (decision === 'hold') return <Badge variant="warning">Hold</Badge>;
-    return <Badge variant="info">{decision}</Badge>;
+  const getDecisionLabel = (type) => {
+    if (type === 'stay') return 'Stay';
+    if (type === 'switch_spot') return 'Switch Spot';
+    if (type === 'switch_ondemand') return 'To On-Demand';
+    return 'No Decision';
   };
 
   if (loading) {
@@ -58,137 +53,196 @@ const ClientModelsTab = ({ clientId }) => {
     );
   }
 
+  if (agents.length === 0) {
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <EmptyState
+          icon={<Server size={48} />}
+          title="No Agents Found"
+          description="No agents are currently registered for this client"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-gray-600">Total Decisions</p>
-              <Activity size={18} className="text-blue-500" />
+      {agents.map((agent) => (
+        <div key={agent.agentId} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          {/* Agent Header */}
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Server size={24} className="text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">{agent.agentName}</h3>
+                <p className="text-xs text-gray-500 font-mono">{agent.agentId}</p>
+              </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{stats.totalDecisions || 0}</p>
-            <p className="text-xs text-gray-500 mt-1">Last 30 days</p>
+            <Badge variant={agent.status === 'online' ? 'success' : 'danger'}>
+              {agent.status}
+            </Badge>
           </div>
 
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-gray-600">Success Rate</p>
-              <TrendingUp size={18} className="text-green-500" />
-            </div>
-            <p className="text-2xl font-bold text-green-600">{stats.successRate || 0}%</p>
-            <p className="text-xs text-gray-500 mt-1">Successful switches</p>
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Last Decision - Circular Progress */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
+              <h4 className="text-sm font-semibold text-gray-700 mb-4">Last Decision</h4>
 
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-gray-600">Avg Confidence</p>
-              <Brain size={18} className="text-purple-500" />
-            </div>
-            <p className="text-2xl font-bold text-purple-600">{stats.avgConfidence || 0}%</p>
-            <p className="text-xs text-gray-500 mt-1">Model confidence</p>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-gray-600">Health Score</p>
-              <CheckCircle size={18} className="text-blue-500" />
-            </div>
-            <p className={`text-2xl font-bold ${stats.healthScore >= 80 ? 'text-green-600' : stats.healthScore >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
-              {stats.healthScore || 0}%
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Overall health</p>
-          </div>
-        </div>
-      )}
-
-      {/* Decisions Table */}
-      <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900">Agent Decision History</h3>
-            <p className="text-sm text-gray-500 mt-1">Recent ML model decisions and outcomes</p>
-          </div>
-          <Badge variant="info">Real-time</Badge>
-        </div>
-
-        {decisions.length === 0 ? (
-          <EmptyState
-            icon={<Brain size={48} />}
-            title="No Decisions Recorded"
-            description="Agent decisions will appear here once the ML models start making predictions"
-          />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Timestamp</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Instance ID</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Decision</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Confidence</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Health</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Reason</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Outcome</th>
-                </tr>
-              </thead>
-              <tbody>
-                {decisions.map((decision, idx) => (
-                  <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-4 px-4">
-                      <p className="text-sm text-gray-900">
-                        {new Date(decision.timestamp).toLocaleString()}
+              {agent.lastDecision?.type ? (
+                <div className="flex flex-col items-center">
+                  {/* Circular Progress Bar */}
+                  <div className="relative w-32 h-32 mb-4">
+                    <svg className="transform -rotate-90 w-32 h-32">
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="transparent"
+                        className="text-gray-200"
+                      />
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="transparent"
+                        strokeDasharray={`${2 * Math.PI * 56}`}
+                        strokeDashoffset={`${2 * Math.PI * 56 * 0.25}`}
+                        className={getDecisionColor(agent.lastDecision.type)}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <p className="text-2xl font-bold text-gray-900">
+                        {agent.lastDecision.elapsed?.value || '0'}
                       </p>
-                    </td>
-                    <td className="py-4 px-4">
-                      <p className="text-sm font-mono text-blue-600 break-all">
-                        {decision.instanceId?.substring(0, 16)}...
+                      <p className="text-xs text-gray-500">
+                        {agent.lastDecision.elapsed?.unit || 'min'}
                       </p>
-                    </td>
-                    <td className="py-4 px-4">
-                      {getDecisionBadge(decision.decision)}
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2 max-w-[80px]">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${decision.confidence || 0}%` }}
-                          ></div>
+                    </div>
+                  </div>
+
+                  <Badge variant={
+                    agent.lastDecision.type === 'stay' ? 'info' :
+                    agent.lastDecision.type === 'switch_spot' ? 'success' :
+                    'warning'
+                  }>
+                    {getDecisionLabel(agent.lastDecision.type)}
+                  </Badge>
+
+                  {agent.lastDecision.elapsed?.formatted && (
+                    <p className="text-xs text-gray-600 mt-2">
+                      {agent.lastDecision.elapsed.formatted} ago
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center py-8">
+                  <XCircle size={48} className="text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-500">No decision yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Pricing Health Status */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+              <h4 className="text-sm font-semibold text-gray-700 mb-4">Pricing Health</h4>
+
+              <div className="flex items-center justify-center mb-4">
+                {agent.pricingHealth?.status === 'healthy' ? (
+                  <div className="flex flex-col items-center">
+                    <CheckCircle size={48} className="text-green-600 mb-2" />
+                    <span className="text-lg font-bold text-green-700">Healthy</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <XCircle size={48} className="text-red-600 mb-2" />
+                    <span className="text-lg font-bold text-red-700">Unhealthy</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="text-center">
+                <p className="text-sm text-gray-600">Reports in last 10 min</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {agent.pricingHealth?.recentReportsCount || 0}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {agent.pricingHealth?.status === 'healthy' ? '≥ 5 required' : '< 5 reports'}
+                </p>
+              </div>
+            </div>
+
+            {/* Last 5 Pricing Reports */}
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-xl border border-purple-200">
+              <h4 className="text-sm font-semibold text-gray-700 mb-4">Recent Data Fetches</h4>
+
+              {agent.pricingHealth?.recentReports && agent.pricingHealth.recentReports.length > 0 ? (
+                <div className="space-y-2">
+                  {agent.pricingHealth.recentReports.slice(0, 5).map((report, idx) => {
+                    const savings = report.onDemandPrice - report.spotPrice;
+                    const savingsPercent = (savings / report.onDemandPrice * 100).toFixed(1);
+
+                    return (
+                      <div key={idx} className="bg-white p-3 rounded-lg border border-purple-200 shadow-sm">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <Clock size={12} className="text-gray-400" />
+                            <span className="text-xs text-gray-600">
+                              {new Date(report.time).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          {parseFloat(savingsPercent) > 0 ? (
+                            <TrendingUp size={14} className="text-green-500" />
+                          ) : (
+                            <TrendingDown size={14} className="text-red-500" />
+                          )}
                         </div>
-                        <span className="text-sm font-medium text-gray-700">
-                          {decision.confidence || 0}%
-                        </span>
+
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <p className="text-gray-500">On-Demand</p>
+                            <p className="font-semibold text-gray-900">
+                              ${report.onDemandPrice.toFixed(4)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Spot</p>
+                            <p className="font-semibold text-gray-900">
+                              ${report.spotPrice.toFixed(4)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-gray-500">Savings</span>
+                            <span className={`text-xs font-bold ${
+                              parseFloat(savingsPercent) > 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {savingsPercent}%
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-lg border ${getHealthColor(decision.health)}`}>
-                        {getHealthIcon(decision.health)}
-                        <span className="text-sm font-bold">{decision.health}%</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <p className="text-sm text-gray-600 max-w-xs truncate">
-                        {decision.reason || 'N/A'}
-                      </p>
-                    </td>
-                    <td className="py-4 px-4">
-                      {decision.outcome === 'success' ? (
-                        <Badge variant="success">Success</Badge>
-                      ) : decision.outcome === 'failed' ? (
-                        <Badge variant="danger">Failed</Badge>
-                      ) : (
-                        <Badge variant="warning">Pending</Badge>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <XCircle size={32} className="text-gray-400 mb-2" />
+                  <p className="text-xs text-gray-500 text-center">No pricing data available</p>
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      ))}
     </div>
   );
 };
