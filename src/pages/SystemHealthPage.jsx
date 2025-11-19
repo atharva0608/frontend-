@@ -117,10 +117,10 @@ const SystemHealthPage = () => {
                 <div className="mt-4">
                   <FileUpload
                     onUpload={handleDecisionEngineUpload}
-                    accept=".pkl,.joblib,.h5,.pb"
+                    accept=".py,.pkl,.joblib"
                     multiple={false}
                     title="Upload Decision Engine"
-                    description="Upload decision engine model file (.pkl, .joblib, .h5, .pb)"
+                    description="Upload decision engine file (.py, .pkl, .joblib)"
                   />
                 </div>
               )}
@@ -194,10 +194,10 @@ const SystemHealthPage = () => {
                 <div className="mt-4">
                   <FileUpload
                     onUpload={handleMLModelsUpload}
-                    accept=".pkl,.joblib,.h5,.pb,.pth,.onnx"
+                    accept=".pkl,.joblib,.h5,.pb,.pth,.onnx,.pt"
                     multiple={true}
                     title="Upload ML Models"
-                    description="Upload ML model files (.pkl, .joblib, .h5, .pb, .pth, .onnx). Multiple files supported."
+                    description="Upload ML model files (.pkl, .joblib, .h5, .pb, .pth, .onnx, .pt). Multiple files supported."
                   />
                 </div>
               )}
