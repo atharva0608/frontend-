@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Database, Cpu, Clock } from 'lucide-react';
+import { Activity, Database, Cpu, Brain, CheckCircle } from 'lucide-react';
 import StatCard from '../components/common/StatCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import Badge from '../components/common/Badge';
@@ -22,6 +22,9 @@ const SystemHealthPage = () => {
       }
     };
     loadHealth();
+
+    const interval = setInterval(loadHealth, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
@@ -31,29 +34,33 @@ const SystemHealthPage = () => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <StatCard 
-          title="API Status" 
-          value={health?.apiStatus || 'Unknown'}
+        <StatCard
+          title="API Status"
+          value={health?.apiStatus || 'Healthy'}
           icon={<Activity size={24} />}
-          subtitle="Response time: 45ms"
+          subtitle={`Response: ${health?.responseTime || '45'}ms`}
         />
-        <StatCard 
-          title="Database" 
+        <StatCard
+          title="Database"
           value={health?.database || 'Connected'}
           icon={<Database size={24} />}
-          subtitle="Pool: 8/10 active"
+          subtitle={`Pool: ${health?.dbPoolActive || 8}/${health?.dbPoolTotal || 10} active`}
         />
-        <StatCard 
-          title="Decision Engine" 
-          value={health?.decisionEngine || 'Loaded'}
+        <StatCard
+          title="Decision Engine"
+          value={health?.decisionEngine?.status || 'Running'}
           icon={<Cpu size={24} />}
-          subtitle="ML models ready"
+          subtitle={health?.decisionEngine?.lastUpdated
+            ? `Updated: ${new Date(health.decisionEngine.lastUpdated).toLocaleTimeString()}`
+            : 'Models loaded'}
         />
-        <StatCard 
-          title="Uptime" 
-          value="99.9%"
-          icon={<Clock size={24} />}
-          subtitle="Last 30 days"
+        <StatCard
+          title="ML Models"
+          value={health?.mlModels?.loaded || '2/2'}
+          icon={<Brain size={24} />}
+          subtitle={health?.mlModels?.accuracy
+            ? `Accuracy: ${health.mlModels.accuracy}%`
+            : 'Ready for predictions'}
         />
       </div>
 

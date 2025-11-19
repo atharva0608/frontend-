@@ -4,18 +4,13 @@ import Button from '../common/Button';
 import api from '../../services/api';
 
 const AgentConfigModal = ({ agent, onClose, onSave }) => {
-  const [config, setConfig] = useState({
-    min_savings_percent: 15,
-    risk_threshold: 0.3,
-    max_switches_per_week: 10,
-    min_pool_duration_hours: 2,
-  });
+  const [terminateWaitMinutes, setTerminateWaitMinutes] = useState(agent.terminateWaitMinutes || 30);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await api.updateAgentConfig(agent.id, config);
+      await api.updateAgentConfig(agent.id, terminateWaitMinutes);
       onSave();
       onClose();
     } catch (error) {
@@ -40,67 +35,27 @@ const AgentConfigModal = ({ agent, onClose, onSave }) => {
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Minimum Savings Percentage
+              Minimum Retention Before Terminating (minutes)
             </label>
             <input
               type="number"
-              value={config.min_savings_percent}
-              onChange={(e) => setConfig({ ...config, min_savings_percent: parseFloat(e.target.value) })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              min="0"
-              max="100"
-              step="0.1"
-            />
-            <p className="text-xs text-gray-500 mt-1">Only switch if savings exceed this percentage</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Risk Threshold
-            </label>
-            <input
-              type="number"
-              value={config.risk_threshold}
-              onChange={(e) => setConfig({ ...config, risk_threshold: parseFloat(e.target.value) })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              min="0"
-              max="1"
-              step="0.01"
-            />
-            <p className="text-xs text-gray-500 mt-1">Maximum acceptable risk score (0-1)</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Max Switches Per Week
-            </label>
-            <input
-              type="number"
-              value={config.max_switches_per_week}
-              onChange={(e) => setConfig({ ...config, max_switches_per_week: parseInt(e.target.value) })}
+              value={terminateWaitMinutes}
+              onChange={(e) => setTerminateWaitMinutes(parseInt(e.target.value) || 0)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               min="1"
-              max="50"
+              max="1440"
+              placeholder="30"
             />
-            <p className="text-xs text-gray-500 mt-1">Prevent excessive switching</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Min Pool Duration (hours)
-            </label>
-            <input
-              type="number"
-              value={config.min_pool_duration_hours}
-              onChange={(e) => setConfig({ ...config, min_pool_duration_hours: parseInt(e.target.value) })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              min="1"
-              max="24"
-            />
-            <p className="text-xs text-gray-500 mt-1">Minimum time before considering another switch</p>
+            <p className="text-xs text-gray-500 mt-2">
+              Minimum time (in minutes) to wait before terminating an instance after switching.
+              This prevents frequent terminations and ensures stability.
+            </p>
+            <p className="text-xs text-blue-600 mt-1">
+              Recommended: 30-60 minutes
+            </p>
           </div>
         </div>
 
