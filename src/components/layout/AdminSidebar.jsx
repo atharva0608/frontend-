@@ -45,7 +45,7 @@ const AdminSidebar = ({ clients, onSelectClient, activeClientId, onSelectPage, a
 
         {/* System Status Card */}
         {systemHealth && (
-          <div className="mx-3 mb-3 bg-gray-800 rounded-lg p-3 border border-gray-700">
+          <div className="mx-3 mt-6 mb-3 bg-gray-800 rounded-lg p-3 border border-gray-700">
             <div className="flex items-center space-x-2 mb-3">
               <Brain size={16} className="text-blue-400" />
               <span className="text-xs font-semibold text-gray-200">System Status</span>
