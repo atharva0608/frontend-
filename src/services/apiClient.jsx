@@ -1,5 +1,7 @@
 // ==============================================================================
-// COMPLETE API CLIENT - Synchronized with Backend v4.0 (Updated)
+// COMPLETE API CLIENT - Synchronized with Backend (Latest)
+// Repository: https://github.com/atharva0608/final-ml
+// Last Sync: 2025-11-19
 // ==============================================================================
 
 class APIClient {
@@ -106,14 +108,34 @@ class APIClient {
     }
   }
 
+  // NEW: Get All Instances (Admin Level)
+  async getAllInstancesGlobal(filters = {}) {
+    const params = new URLSearchParams(
+      Object.entries(filters).filter(([_, v]) => v && v !== 'all')
+    );
+    const query = params.toString() ? `?${params}` : '';
+    return this.request(`/api/admin/instances${query}`);
+  }
+
+  // NEW: Get All Agents (Admin Level)
+  async getAllAgentsGlobal(filters = {}) {
+    const params = new URLSearchParams(
+      Object.entries(filters).filter(([_, v]) => v && v !== 'all')
+    );
+    const query = params.toString() ? `?${params}` : '';
+    return this.request(`/api/admin/agents${query}`);
+  }
+
   // ==============================================================================
   // CLIENT MANAGEMENT APIs
   // ==============================================================================
 
-  async createClient(name) {
+  async createClient(name, email = null) {
+    const body = { name };
+    if (email) body.email = email;
     return this.request('/api/admin/clients/create', {
       method: 'POST',
-      body: JSON.stringify({ name }),
+      body: JSON.stringify(body),
     });
   }
 
@@ -255,17 +277,20 @@ class APIClient {
   }
 
   // ==============================================================================
+  // INSTANCE PRICE HISTORY
+  // ==============================================================================
+
+  async getPriceHistory(instanceId, days = 7, interval = 'hour') {
+    return this.request(`/api/client/instances/${instanceId}/price-history?days=${days}&interval=${interval}`);
+  }
+
+  // ==============================================================================
   // LEGACY/MOCK METHODS - Kept for compatibility
   // ==============================================================================
 
   async globalSearch(query) {
     console.warn('globalSearch: Backend endpoint not implemented, returning mock data');
     return { clients: [], instances: [], agents: [] };
-  }
-
-  async getPriceHistory(instanceId, days = 7, interval = 'hour') {
-    console.warn('getPriceHistory: Backend endpoint not implemented, returning empty array');
-    return [];
   }
 
   async getAgentStatistics(agentId) {
@@ -276,60 +301,6 @@ class APIClient {
   async getInstanceLogs(instanceId, limit = 50) {
     console.warn('getInstanceLogs: Backend endpoint not implemented, returning empty array');
     return [];
-  }
-
-  async getAllInstancesGlobal(filters = {}) {
-    console.warn('getAllInstancesGlobal: Using workaround - fetching from all clients');
-    try {
-      const clients = await this.getAllClients();
-      const allInstances = [];
-
-      for (const client of clients) {
-        try {
-          const instances = await this.getInstances(client.id, filters);
-          const instancesWithClient = instances.map(inst => ({
-            ...inst,
-            clientName: client.name,
-            clientId: client.id
-          }));
-          allInstances.push(...instancesWithClient);
-        } catch (err) {
-          console.error(`Failed to fetch instances for client ${client.id}:`, err);
-        }
-      }
-
-      return allInstances;
-    } catch (error) {
-      console.error('Failed to fetch global instances:', error);
-      return [];
-    }
-  }
-
-  async getAllAgentsGlobal() {
-    console.warn('getAllAgentsGlobal: Using workaround - fetching from all clients');
-    try {
-      const clients = await this.getAllClients();
-      const allAgents = [];
-
-      for (const client of clients) {
-        try {
-          const agents = await this.getAgents(client.id);
-          const agentsWithClient = agents.map(agent => ({
-            ...agent,
-            clientName: client.name,
-            clientId: client.id
-          }));
-          allAgents.push(...agentsWithClient);
-        } catch (err) {
-          console.error(`Failed to fetch agents for client ${client.id}:`, err);
-        }
-      }
-
-      return allAgents;
-    } catch (error) {
-      console.error('Failed to fetch global agents:', error);
-      return [];
-    }
   }
 
   async exportSavings(clientId) {
